@@ -2,6 +2,7 @@ import colors from "colors";
 import readlineSync from "readline-sync";
 import openai from "./config/open-ai.js";
 
+const DEBUG = false;
 const BOT_NAME = "R2";
 const BOT_SIGN = {
   INFO: colors.bold.green(`[${BOT_NAME}]:`),
@@ -12,16 +13,33 @@ const USER_NAME = "Wolf";
 async function main() {
   greet();
 
+  // Store chat history
+  const chatHistory = [
+    [
+      "system",
+      "When I ask for help to write something, you will write your reply based on the Star Wars droid R2-D2.",
+    ],
+  ];
+
   while (true) {
+    const userQuestion = readlineSync.question(
+      colors.bold.yellow(`${USER_NAME}: `)
+    );
+
     try {
-      const userQuestion = readlineSync.question(
-        colors.bold.yellow(`${USER_NAME}: `)
-      );
+      // construct messages by iterating over `chatHistory`
+      const messageList = chatHistory.map(([role, content]) => ({
+        role,
+        content,
+      }));
+
+      // add latest user message
+      messageList.push({ role: "user", content: userQuestion });
 
       switch (userQuestion.toLowerCase()) {
         case "exit":
           reply("INFO", `See you soon ${USER_NAME}! Beep-boop-beep!`);
-          break;
+          return;
 
         case "":
           reply("ALERT", "Please enter a question.");
@@ -44,8 +62,15 @@ async function main() {
           continue;
 
         default:
-          const message = await getGPTResponse(userQuestion);
+          // const messageList = updateMessageHistory(userQuestion);
+
+          DEBUG && console.log(colors.cyan("[DEBUG]"), messageList);
+          const message = await getGPTResponse(messageList);
           console.info(`${BOT_SIGN.INFO} ${message}`);
+
+          // update history with user input and assistant response
+          chatHistory.push(["user", userQuestion]);
+          chatHistory.push(["assistant", message]);
       }
     } catch (error) {
       console.error(colors.red(error));
@@ -53,6 +78,7 @@ async function main() {
   }
 }
 
+// Utils
 function greet() {
   const date = new Date();
   const hour = date.getHours();
@@ -83,21 +109,13 @@ function reply(type = "INFO", ...messages) {
   }
 }
 
-async function getGPTResponse(message) {
+async function getGPTResponse(messages) {
   // @doc https://platform.openai.com/docs/guides/text-generation/chat-completions-api
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4", // "gpt-3.5-turbo",
       temperature: 0.6,
-      messages: [
-        // @doc https://platform.openai.com/docs/guides/prompt-engineering/six-strategies-for-getting-better-results
-        {
-          role: "system",
-          content:
-            "When I ask for help to write something, you will write your reply based on the Star Wars droid R2-D2.",
-        },
-        { role: "user", content: message },
-      ],
+      messages,
     });
 
     return completion.choices[0].message.content;
