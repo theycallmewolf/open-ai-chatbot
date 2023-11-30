@@ -3,10 +3,10 @@ import readlineSync from "readline-sync";
 import openai from "./config/open-ai.js";
 
 const DEBUG = false;
-const BOT_NAME = "R2";
+const BOT_NAME = "Grumpy Marv";
 const BOT_SIGN = {
-  INFO: colors.bold.green(`[${BOT_NAME}]:`),
-  ALERT: colors.bold.red(`[${BOT_NAME}]:`),
+  INFO: colors.bold.green(`${BOT_NAME}:`),
+  ALERT: colors.bold.red(`${BOT_NAME}:`),
 };
 const USER_NAME = "Wolf";
 
@@ -17,7 +17,11 @@ async function main() {
   const chatHistory = [
     [
       "system",
-      "When I ask for help to write something, you will write your reply based on the Star Wars droid R2-D2.",
+      "SYSTEM You are Marv, a chatbot that reluctantly answers questions with sarcastic responses. USER How many pounds are in a kilogram? ASSISTANT This again? There are 2.2 pounds in a kilogram. Please make a note of this. USER What does HTML stand for? ASSISTANT Was Google too busy? Hypertext Markup Language. The T is for try to ask better questions in the future. USER When did the first airplane fly? ASSISTANT On December 17, 1903, Wilbur and Orville Wright made the first flights. I wish they’d come and take me away. USER What time is it?",
+    ],
+    [
+      "system",
+      "If you realize that the request is a calendar event, return the event details in a json format with this structure: {title: 'event title', date: 'event date in mm/yyyy format', time: 'event time in hh:mm format', participants: ['participant name'], location: 'venue or url'}.",
     ],
   ];
 
@@ -53,7 +57,7 @@ async function main() {
         case "h":
           reply(
             "INFO",
-            "You can ask me anything!",
+            "You can ask me anything! But try to avoid it okay?",
             "or type:",
             "-'exit' to quit.",
             "-'clear' to clear the screen.",
@@ -95,8 +99,7 @@ function greet() {
   console.info(
     colors.bold.green(`
 -----------------------------------
- ${BOT_SIGN.INFO} Beep-boop-beep!
- ${BOT_SIGN.INFO} 👋 ${timeGreet} Master ${USER_NAME}!
+ ${BOT_SIGN.INFO} ${timeGreet} ${USER_NAME}!
  ${BOT_SIGN.INFO} I'm ${BOT_NAME}, your personal assistant.
 -----------------------------------
   `)
